@@ -12,9 +12,6 @@ export default async function PlantDetailPage({ params }) {
         .single();
 
     // fetch the signed URL for the plant's photo
-
-    console.log("Plant data fetched:", plant);
-
     const { data } = await supabase.storage
         .from("plant-photos")
         .createSignedUrl(plant.photo_url, 60);
@@ -26,7 +23,7 @@ export default async function PlantDetailPage({ params }) {
     const { data: tasks, error: tasksError } = await supabase
         .from("care_tasks")
         .select("*")
-        .eq("plant_id", params.id)
+        .eq("plant_id", id)
         .order("next_due_at", { ascending: true });
 
     plant.tasks = tasks;
@@ -40,6 +37,7 @@ export default async function PlantDetailPage({ params }) {
 
     plant.care_profile = careProfile;
 
+    console.log("Final plant data:", plant);
+
     return <MainView plant={plant} />;
 }
-
