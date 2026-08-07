@@ -24,7 +24,5 @@ export default async function PlantsPage() {
         plant.image_url = signedUrls[index];
     });
 
-    console.log('Plants with signed URLs:', plants);
-
     return <MainView plants={plants} />;
 }

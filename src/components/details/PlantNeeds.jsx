@@ -3,14 +3,24 @@
 import { useState } from "react";
 import NeedRow from "./NeedRow";
 import { TfiArrowCircleDown, TfiArrowCircleUp } from "react-icons/tfi";
+import { FiDroplet, FiSun, } from "react-icons/fi";
+import { PiPawPrint } from "react-icons/pi";
+import { CiCloud } from "react-icons/ci";
+import { PiSprayBottleBold } from "react-icons/pi";
+
+const icons = {
+    water: FiDroplet,
+    mist: PiSprayBottleBold,
+    light: FiSun,
+    humidity: CiCloud,
+    toxicity: PiPawPrint,
+};
 
 export default function PlantNeeds({ needs }) {
     const [expandedIndex, setExpandedIndex] = useState(null);
 
     const toggleAccordion = (index) => setExpandedIndex(expandedIndex === index ? null : index);
 
-
-    console.log('Plant needs:', needs);
     return (
         <div>
             <h2 className="mb-2 text-xl font-semibold text-black">
@@ -21,11 +31,11 @@ export default function PlantNeeds({ needs }) {
             </p>
 
             <div className="space-y-3">
-                <NeedRow key="water" label="Watering" notes={needs.watering.method} />
-                <NeedRow key="mist" label="Misting" notes={needs.mist.notes} />
-                <NeedRow key="light" label={`Light - ${needs.light.level}`} notes={needs.light.notes} />
-                <NeedRow key="humidity" label={`Humidity - ${needs.humidity.level}`} notes={needs.humidity.notes} />
-                {needs.toxicity.pets && <NeedRow key="toxicity" label="Toxicity" notes={needs.toxicity.notes} />}
+                <NeedRow key="water" label="Watering" notes={needs.watering.method} icon={icons.water} />
+                <NeedRow key="mist" label="Misting" notes={needs.mist.notes} icon={icons.mist} />
+                <NeedRow key="light" label={`Light - ${needs.light.level}`} notes={needs.light.notes} icon={icons.light} />
+                <NeedRow key="humidity" label={`Humidity - ${needs.humidity.level}`} notes={needs.humidity.notes} icon={icons.humidity} />
+                {needs.toxicity.pets && <NeedRow key="toxicity" label="Toxicity" notes={needs.toxicity.notes} icon={icons.toxicity} />}
             </div>
             {/* common problems - symptoms, cause, fix as accordion */}
             <div className="mt-6">

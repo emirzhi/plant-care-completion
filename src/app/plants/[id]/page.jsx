@@ -37,7 +37,5 @@ export default async function PlantDetailPage({ params }) {
 
     plant.care_profile = careProfile;
 
-    console.log("Final plant data:", plant);
-
     return <MainView plant={plant} />;
 }
