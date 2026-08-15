@@ -18,17 +18,32 @@ self.addEventListener("push", (event) => {
     try {
         payload = event.data.json();
     } catch {
-        payload = { title: "Plant Care Completion", body: event.data.text() };
+        payload = { title: "Plant Care", body: event.data.text() };
     }
 
-    const title = payload.title || "Plant Care Completion";
-    const options = {
-        body: payload.body || "You have a new notification.",
-        icon: "/icons/image_512x512.png",
-        badge: "/icons/image_512x512.png",
-        data: payload.data || {},
-        tag: payload.tag || "plant-care-completion-notification",
-    };
+    event.waitUntil(
+        self.registration.showNotification(payload.title, {
+            body: payload.body,
+            icon: "/icons/image_512x512.png",
+            badge: "/icons/image_512x512.png",
+            data: payload.data || {},
+            tag: payload.tag || "overdue-care",
+            renotify: true,
+        })
+    );
+});
 
+self.addEventListener("notificationclick", (event) => {
+    event.notification.close();
 
+    const urlToOpen = event.notification.data?.url || "/plants";
+
+    event.waitUntil(
+        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+            const existing = clientList.find((c) => c.url.includes(new URL(urlToOpen, self.location.origin).pathname));
+
+            if (existing) return existing.focus();
+            return self.clients.openWindow(urlToOpen);
+        })
+    );
 })

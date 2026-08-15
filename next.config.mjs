@@ -1,8 +1,16 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  /* config options here */
+import withSerwistInit from '@serwist/next';
+
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.js",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development",
+});
+
+export default withSerwist({
   reactCompiler: true,
-  images:{
+  turbopack: {},
+  images: {
     remotePatterns: [
       {
         protocol: 'https',
@@ -11,6 +19,4 @@ const nextConfig = {
       },
     ],
   }
-};
-
-export default nextConfig;
+});

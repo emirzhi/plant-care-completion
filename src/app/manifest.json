@@ -1,6 +1,14 @@
 {
+  "id": "/",
   "name": "Plant Care Completion",
-  "short_name": "Plant Care Completion",
+  "short_name": "Plant Care",
+  "description": "A plant care app that helps you keep track of your plants and their needs.",
+  "start_url": "/plants",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#10B981",
+  "background_color": "#F9FAFB",
   "icons": [
     {
       "src": "/icons/image_512x512.png",
@@ -28,10 +36,5 @@
       "form_factor": "narrow",
       "label": "Mobile view"
     }
-  ],
-  "theme_color": "#000000",
-  "background_color": "#FFFFFF",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }

@@ -10,6 +10,12 @@ export default async function PlantsPage() {
         redirect('/signin');
     }
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('email, timezone, reminder_hour, push_subscription')
+        .eq('id', user.id)
+        .single();
+
     const { data: plants, error } = await supabase.from('plants').select('*');
 
     const photos = plants.map(plant => plant.photo_url);
@@ -24,5 +30,5 @@ export default async function PlantsPage() {
         plant.image_url = signedUrls[index];
     });
 
-    return <MainView plants={plants} />;
+    return <MainView plants={plants} profile={profile} />;
 }
