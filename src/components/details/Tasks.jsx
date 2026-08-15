@@ -16,12 +16,35 @@ const labels = {
     mist: "Mist",
     rotate: "Rotate",
     fertilize: "Fertilize",
+
+    // Add more task types and their corresponding labels here
+    Watering: "Watering",
+    Misting: "Misting",
+    Rotating: "Rotating",
+    Fertilizing: "Fertilizing",
+
+    Water: "Water",
+    Mist: "Mist",
+    Rotate: "Rotate",
+    Fertilize: "Fertilize",
 };
 
 export default function Tasks({ tasks: initialTasks }) {
     const [tasks, setTasks] = useState(initialTasks);
     const [toggleEditTaskId, setToggleEditTaskId] = useState(null);
     const [newInterval, setNewInterval] = useState(null);
+
+    const getDueText = (nextDueAt) => {
+        const daysUntilDue = Math.ceil((new Date(nextDueAt) - new Date()) / (1000 * 60 * 60 * 24));
+
+        if (daysUntilDue < 0) {
+            return `Overdue by ${Math.abs(daysUntilDue)} days`;
+        } else if (daysUntilDue === 0) {
+            return "Due today";
+        } else {
+            return `Due in ${daysUntilDue} days`;
+        }
+    }
 
     const handleEditClick = (task) => {
         setToggleEditTaskId(toggleEditTaskId === task.id ? null : task.id);
@@ -123,7 +146,7 @@ export default function Tasks({ tasks: initialTasks }) {
 
                             <div className="flex flex-col">
                                 {task.paused === true ? (
-                                    <span className="text-medium text-gray-400">{labels[task.task_type]} - Paused</span>
+                                    <span className="text-medium text-gray-400">{task.name || labels[task.task_type] || task.task_type} - Paused</span>
                                 ) : (
                                     <>
                                         <span
@@ -132,7 +155,8 @@ export default function Tasks({ tasks: initialTasks }) {
                                                 : "text-gray-900"
                                                 }`}
                                         >
-                                            {labels[task.task_type]} - in {Math.ceil((new Date(task.next_due_at) - new Date()) / (1000 * 60 * 60 * 24))} days
+                                            {task.name || labels[task.task_type] || task.task_type} -{" "}
+                                            {getDueText(task.next_due_at)}
                                         </span>
                                         <span className="text-sm text-gray-500">
                                             Every {task.interval_days} days

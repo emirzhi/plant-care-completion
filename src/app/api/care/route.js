@@ -42,13 +42,13 @@ export async function POST(request) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { species } = await request.json();
+    const { species, custom_name } = await request.json();
 
     // check if care profile already exists in database
     const { data: existingProfile, error: fetchError } = await admin
         .from("care_profiles")
         .select("*")
-        .eq("species_scientific", species)
+        .eq("species_scientific", species.scientific_name)
         .single();
 
     if (existingProfile?.profile_json) {
@@ -117,21 +117,23 @@ export async function POST(request) {
                     content: [
                         {
                             type: "text",
-                            text: `Generate a care profile for the plant species "${species}". Return only a JSON object matching the specified shape.`,
+                            text: `Generate a care profile for the plant species "${species.scientific_name || custom_name}". Return only a JSON object matching the specified shape.`,
                         }
                     ],
                 }
             ],
         });
 
-        const anthropicText = anthropicResponse.completion?.text?.trim();
+        const rawResponse = anthropicResponse.content[0]?.text;
 
-        if (!anthropicText) {
+        if (!rawResponse) {
             return NextResponse.json({ error: "No response from Anthropic API" }, { status: 500 });
         }
 
+        const cleanedResponse = rawResponse.replace(/```json|```/g, "").trim();
+
         // validate the response using zod
-        const parsedProfile = responseSchema.safeParse(JSON.parse(anthropicText));
+        const parsedProfile = responseSchema.safeParse(JSON.parse(cleanedResponse));
 
         if (!parsedProfile.success) {
             return NextResponse.json({ error: "Invalid care profile format from Anthropic API", details: parsedProfile.error.errors }, { status: 500 });
@@ -141,42 +143,15 @@ export async function POST(request) {
         const { data: insertedProfile, error: insertError } = await admin
             .from("care_profiles")
             .upsert({
-                species_scientific: species,
+                species_scientific: species.scientific_name,
                 profile_json: parsedProfile.data,
                 source: "ai"
             })
 
         return NextResponse.json(parsedProfile.data);
     } catch (error) {
-        if (error instanceof Anthropic.ApiError) {
-            console.error("Anthropic API error:", error.message);
-            return NextResponse.json({ error: "Anthropic API error: " + error.message }, { status: 500 });
-        }
-        if (error instanceof Anthropic.ValidationError) {
-            console.error("Anthropic validation error:", error.message);
-            return NextResponse.json({ error: "Anthropic validation error: " + error.message }, { status: 500 });
-        }
-        if (error instanceof Anthropic.RateLimitError) {
-            console.error("Anthropic rate limit error:", error.message);
-            return NextResponse.json({ error: "Anthropic rate limit error: " + error.message }, { status: 429 });
-        }
-        if (error instanceof Anthropic.AuthenticationError) {
-            console.error("Anthropic authentication error:", error.message);
-            return NextResponse.json({ error: "Anthropic authentication error: " + error.message }, { status: 401 });
-        }
-        if (error instanceof Anthropic.NetworkError) {
-            console.error("Anthropic network error:", error.message);
-            return NextResponse.json({ error: "Anthropic network error: " + error.message }, { status: 503 });
-        }
-        if (error instanceof Anthropic.InternalServerError) {
-            console.error("Anthropic internal server error:", error.message);
-            return NextResponse.json({ error: "Anthropic internal server error: " + error.message }, { status: 500 });
-        }
-        if (error instanceof Anthropic.BadRequestError) {
-            console.error("Anthropic bad request error:", error.message);
-            return NextResponse.json({ error: "Anthropic bad request error: " + error.message }, { status: 400 });
-        }
+        const message = error instanceof Error ? error.message : String(error);
 
-        return NextResponse.json({ error: "Unexpected error: " + error.message }, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error", details: message, }, { status: 500 });
     }
 }

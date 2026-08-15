@@ -49,22 +49,22 @@ export async function POST(request) {
         note: z.string().optional(),
     });
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { image } = await request.json();
-
-    if (!image) {
-        return NextResponse.json({ error: "Image is required" }, { status: 400 });
-    }
-
-    const anthropicClient = getAnthropicClient();
-
     try {
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { image } = await request.json();
+
+        if (!image) {
+            return NextResponse.json({ error: "Image is required" }, { status: 400 });
+        }
+
+        const anthropicClient = getAnthropicClient();
+
         const anthropicResponse = await anthropicClient.messages.create({
             model: process.env.ANTHROPIC_AI_MODEL,
             max_tokens: 1024,
@@ -94,38 +94,14 @@ export async function POST(request) {
         })
 
         const rawResponse = anthropicResponse.content[0].text;
-        const parsedResponse = responseSchema.parse(JSON.parse(rawResponse));
+        // remove markdown code fences if present
+        const cleanedResponse = rawResponse.replace(/```json|```/g, "").trim();
+
+        const parsedResponse = responseSchema.parse(JSON.parse(cleanedResponse));
         return NextResponse.json(parsedResponse);
     } catch (error) {
-        if (error instanceof Anthropic.ApiError) {
-            console.error("Anthropic API error:", error.message);
-            return NextResponse.json({ error: "Anthropic API error: " + error.message }, { status: 500 });
-        }
-        if (error instanceof Anthropic.ValidationError) {
-            console.error("Anthropic validation error:", error.message);
-            return NextResponse.json({ error: "Anthropic validation error: " + error.message }, { status: 500 });
-        }
-        if (error instanceof Anthropic.RateLimitError) {
-            console.error("Anthropic rate limit error:", error.message);
-            return NextResponse.json({ error: "Anthropic rate limit error: " + error.message }, { status: 429 });
-        }
-        if (error instanceof Anthropic.AuthenticationError) {
-            console.error("Anthropic authentication error:", error.message);
-            return NextResponse.json({ error: "Anthropic authentication error: " + error.message }, { status: 401 });
-        }
-        if (error instanceof Anthropic.NetworkError) {
-            console.error("Anthropic network error:", error.message);
-            return NextResponse.json({ error: "Anthropic network error: " + error.message }, { status: 503 });
-        }
-        if (error instanceof Anthropic.InternalServerError) {
-            console.error("Anthropic internal server error:", error.message);
-            return NextResponse.json({ error: "Anthropic internal server error: " + error.message }, { status: 500 });
-        }
-        if (error instanceof Anthropic.BadRequestError) {
-            console.error("Anthropic bad request error:", error.message);
-            return NextResponse.json({ error: "Anthropic bad request error: " + error.message }, { status: 400 });
-        }
+        const message = error instanceof Error ? error.message : String(error);
 
-        return NextResponse.json({ error: "Unexpected error: " + error.message }, { status: 500 });
+        return NextResponse.json({ error: "Unexpected error", details: message, }, { status: 500 });
     }
 }
