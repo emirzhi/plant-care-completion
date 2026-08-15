@@ -13,13 +13,19 @@ export async function signInWithEmail(email) {
 
 export async function signInWithGoogle() {
     const supabase = await createClient(cookies());
+
     const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-            redirectTo: `http://localhost:3000/auth/callback`
-        }
+            redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        },
     });
-    
+
+    if (error) {
+        console.error("Google sign-in error:", error);
+        return;
+    }
+
     if (data?.url) {
         redirect(data.url);
     }
