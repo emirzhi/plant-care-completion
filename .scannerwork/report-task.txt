@@ -1,0 +1,6 @@
+projectKey=plant-care-completion
+serverUrl=http://localhost:9001
+serverVersion=26.8.0.126808
+dashboardUrl=http://localhost:9001/dashboard?id=plant-care-completion
+ceTaskId=4bdea228-9d12-4adb-92e2-cce951c64948
+ceTaskUrl=http://localhost:9001/api/ce/task?id=4bdea228-9d12-4adb-92e2-cce951c64948
